@@ -8,6 +8,7 @@ import com.gentics.mesh.doc.GenerateDocumentation;
 import com.gentics.mesh.etc.config.MeshOptions;
 import com.gentics.mesh.etc.config.env.EnvironmentVariable;
 import com.gentics.mesh.etc.config.env.Option;
+import io.vertx.core.json.JsonObject;
 
 /**
  * Search engine options POJO.
@@ -43,6 +44,8 @@ public class ElasticSearchOptions implements Option {
 
 	public static final boolean DEFAULT_HOSTNAME_VERIFICATION = true;
 
+	public static final String DEFAULT_MESH_ELASTICSEARCH_INDEX_SETTINGS = "{\"analysis\":{\"analyzer\":{\"trigrams\":{\"filter\":[\"lowercase\"],\"tokenizer\":\"mesh_default_ngram_tokenizer\"}},\"tokenizer\":{\"mesh_default_ngram_tokenizer\":{\"type\":\"nGram\",\"min_gram\":\"3\",\"max_gram\":\"3\"}}}}";
+
 	public static final long DEFAULT_INDEX_CHECK_INTERVAL = 60 * 1000;
 	public static final long DEFAULT_INDEX_MAPPING_CACHE_TIMEOUT = 60 * 60 * 1000;
 
@@ -69,6 +72,7 @@ public class ElasticSearchOptions implements Option {
 	public static final String MESH_ELASTICSEARCH_SYNC_BATCH_SIZE_ENV = "MESH_ELASTICSEARCH_SYNC_BATCH_SIZE";
 	public static final String MESH_ELASTICSEARCH_HOSTNAME_VERIFICATION_ENV = "MESH_ELASTICSEARCH_HOSTNAME_VERIFICATION";
 	public static final String MESH_ELASTICSEARCH_INCLUDE_BINARY_FIELDS_ENV = "MESH_ELASTICSEARCH_INCLUDE_BINARY_FIELDS";
+	public static final String MESH_ELASTICSEARCH_INDEX_SETTINGS_ENV = "MESH_ELASTICSEARCH_INDEX_SETTINGS";
 
 	public static final String MESH_ELASTICSEARCH_INDEX_CHECK_INTERVAL_ENV = "MESH_ELASTICSEARCH_INDEX_CHECK_INTERVAL";
 	public static final String MESH_ELASTICSEARCH_INDEX_MAPPING_CACHE_TIMEOUT_ENV = "MESH_ELASTICSEARCH_INDEX_MAPPING_CACHE_TIMEOUT";
@@ -195,6 +199,11 @@ public class ElasticSearchOptions implements Option {
 	@JsonPropertyDescription("Configure the index sync batch size. Default: " + DEFAULT_SYNC_BATCH_SIZE)
 	@EnvironmentVariable(name = MESH_ELASTICSEARCH_SYNC_BATCH_SIZE_ENV, description = "Override the search sync batch size")
 	private int syncBatchSize = DEFAULT_SYNC_BATCH_SIZE;
+
+	@JsonProperty(required = false)
+	@JsonPropertyDescription("Configure the index settings. Default: " + DEFAULT_MESH_ELASTICSEARCH_INDEX_SETTINGS)
+	@EnvironmentVariable(name = MESH_ELASTICSEARCH_INDEX_SETTINGS_ENV, description = "Override the index settings")
+	private JsonObject indexSettings = new JsonObject(DEFAULT_MESH_ELASTICSEARCH_INDEX_SETTINGS);
 
 	@JsonProperty(required = false)
 	@JsonPropertyDescription("Set the interval of index checks in ms. Default: " + DEFAULT_INDEX_CHECK_INTERVAL)
@@ -527,5 +536,29 @@ public class ElasticSearchOptions implements Option {
 	 */
 	public void setIndexMappingCacheTimeout(long indexMappingCacheTimeout) {
 		this.indexMappingCacheTimeout = indexMappingCacheTimeout;
+	}
+
+	/**
+	 * Get index settings as json object
+	 * @return index settings
+	 */
+	public JsonObject getIndexSettings() {
+		return indexSettings;
+	}
+
+	/**
+	 * Set index settings from string
+	 * @param indexSettings index settings (string)
+	 */
+	public void setIndexSettings(String indexSettings) {
+		this.indexSettings = new JsonObject(indexSettings);
+	}
+
+	/**
+	 * Set index settings from json object
+	 * @param indexSettings json index settings
+	 */
+	public void setIndexSettings(JsonObject indexSettings) {
+		this.indexSettings = indexSettings;
 	}
 }
