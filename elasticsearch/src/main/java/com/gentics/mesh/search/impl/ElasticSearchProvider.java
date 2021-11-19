@@ -138,21 +138,7 @@ public class ElasticSearchProvider implements SearchProvider {
 	 */
 	@Override
 	public JsonObject getDefaultIndexSettings() {
-
-		JsonObject tokenizer = new JsonObject();
-		tokenizer.put("type", "nGram");
-		tokenizer.put("min_gram", "3");
-		tokenizer.put("max_gram", "3");
-
-		JsonObject trigramsAnalyzer = new JsonObject();
-		trigramsAnalyzer.put("tokenizer", "mesh_default_ngram_tokenizer");
-		trigramsAnalyzer.put("filter", new JsonArray().add("lowercase"));
-
-		JsonObject analysis = new JsonObject();
-		analysis.put("analyzer", new JsonObject().put("trigrams", trigramsAnalyzer));
-		analysis.put("tokenizer", new JsonObject().put("mesh_default_ngram_tokenizer", tokenizer));
-		return new JsonObject().put("analysis", analysis);
-
+		return options.getSearchOptions().getIndexSettings();
 	}
 
 	@Override
@@ -277,6 +263,10 @@ public class ElasticSearchProvider implements SearchProvider {
 			}
 
 			JsonObject json = createIndexSettings(info);
+			if (log.isDebugEnabled()) {
+				log.debug(json.toString());
+			}
+
 			Completable indexCreation = client.createIndex(indexName, json).async()
 				.doOnSuccess(response -> {
 					if (log.isDebugEnabled()) {
@@ -480,17 +470,13 @@ public class ElasticSearchProvider implements SearchProvider {
 	}
 
 	@Override
-	public String getVersion(boolean failIfNotAvailable) {
+	public String getVersion() {
 		try {
 			JsonObject info = client.info().sync();
 			return info.getJsonObject("version").getString("number");
 		} catch (HttpErrorException e) {
 			log.error("Unable to fetch node information.", e);
-			if (failIfNotAvailable) {
-				throw error(INTERNAL_SERVER_ERROR, "Error while fetching version info from elasticsearch.");
-			} else {
-				return null;
-			}
+			throw error(INTERNAL_SERVER_ERROR, "Error while fetching version info from elasticsearch.");
 		}
 	}
 
